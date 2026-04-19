@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Mobile | Porting Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        usmBlue: '#0047FF',
+                        usmDark: '#0A0B10',
+                        usmGray: '#F4F7FA',
+                        usmBorder: '#E5E7EB',
+                        usmSuccess: '#10B981',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .sms-bounce { animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes bounceIn {
+            from { opacity: 0; transform: translateY(100px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .log-entry { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-usmGray text-usmDark antialiased font-sans">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const PortingSafetyNet = () => {
+            const [carrier, setCarrier] = useState('Mint Mobile');
+            const [isIdle, setIsIdle] = useState(false);
+            const [timer, setTimer] = useState(15);
+            const [systemLog, setSystemLog] = useState([]);
+            const [showSMS, setShowSMS] = useState(false);
+            const [interventionSent, setInterventionSent] = useState(false);
+
+            const carriers = {
+                'Mint Mobile': { pinGuide: 'Open the Mint app > Account > Transfer Number. Your PIN is 1234.', code: '#PORT not required' },
+                'Verizon': { pinGuide: 'Dial #PORT from your Verizon phone to generate a Transfer PIN.', code: '#PORT' },
+                'T-Mobile': { pinGuide: 'Log in to T-Mobile.com > Account > Profile Settings > Line Settings > Request Transfer PIN.', code: 'Account PIN' }
+            };
+
+            // Simulated Inactivity Timer
+            useEffect(() => {
+                let interval;
+                if (!isIdle && !interventionSent) {
+                    interval = setInterval(() => {
+                        setTimer(t => {
+                            if (t <= 1) {
+                                setIsIdle(true);
+                                triggerSafetyNet();
+                                return 0;
+                            }
+                            return t - 1;
+                        });
+                    }, 1000);
+                }
+                return () => clearInterval(interval);
+            }, [isIdle, interventionSent]);
+
+            const triggerSafetyNet = () => {
+                const logs = [
+                    { msg: 'CRON: Hourly check started...', type: 'info' },
+                    { msg: 'SQL: SELECT * FROM porting WHERE status="PENDING" AND idle_time > 15m', type: 'sql' },
+                    { msg: 'MATCH: User found (Current Carrier: ' + carrier + ')', type: 'success' },
+                    { msg: 'CRM: Cross-referencing HubSpot (Port_Intervention_Sent = False)', type: 'info' },
+                    { msg: 'TWILIO: Firing carrier-specific guide...', type: 'success' },
+                    { msg: 'CRM: Updating Port_Intervention_Sent = True', type: 'info' }
+                ];
+
+                let i = 0;
+                const logInterval = setInterval(() => {
+                    if (i < logs.length) {
+                        setSystemLog(prev => [logs[i], ...prev]);
+                        if (logs[i].msg.includes('TWILIO')) setShowSMS(true);
+                        i++;
+                    } else {
+                        clearInterval(logInterval);
+                        setInterventionSent(true);
+                    }
+                }, 800);
+            };
+
+            return (
+                <div class="min-h-screen flex flex-col md:flex-row">
+                    {/* LEFT: THE APP UI */}
+                    <div class="flex-1 p-8 md:p-12 bg-white flex flex-col justify-center border-r border-usmBorder relative overflow-hidden">
+                        <div class="max-w-md mx-auto w-full">
+                            <div class="text-xs font-black text-usmBlue uppercase tracking-widest mb-2">Step 4 of 6</div>
+                            <h1 class="text-3xl font-black mb-2 tracking-tight">Transfer your number</h1>
+                            <p class="text-gray-400 mb-10 font-medium leading-relaxed">We'll move your number to US Mobile in minutes. Most ports take less than 1 hour.</p>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Current Carrier</label>
+                                    <select 
+                                        value={carrier}
+                                        onChange={(e) => { setCarrier(e.target.value); setTimer(15); setIsIdle(false); setShowSMS(false); setSystemLog([]); setInterventionSent(false); }}
+                                        class="w-full p-4 bg-usmGray border-2 border-transparent focus:border-usmBlue rounded-xl font-bold outline-none transition-all appearance-none"
+                                    >
+                                        <option>Mint Mobile</option>
+                                        <option>Verizon</option>
+                                        <option>T-Mobile</option>
+                                    </select>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Account Number</label>
+                                        <input type="text" placeholder="e.g. 1234567" class="w-full p-4 bg-usmGray border-2 border-transparent focus:border-usmBlue rounded-xl font-bold outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Transfer PIN</label>
+                                        <input type="text" placeholder="e.g. 0000" class="w-full p-4 bg-usmGray border-2 border-transparent focus:border-usmBlue rounded-xl font-bold outline-none" />
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 leading-relaxed font-medium">
+                                    💡 <b>Help:</b> You can find this on your {carrier} bill or in their mobile app settings.
+                                </div>
+
+                                <button class="w-full py-5 bg-usmBlue text-white font-black rounded-2xl opacity-50 cursor-not-allowed uppercase italic tracking-tighter">Activate Number</button>
+                            </div>
+                        </div>
+
+                        {/* MOCK SMS POPUP */}
+                        {showSMS && (
+                            <div class="absolute bottom-8 left-8 right-8 md:left-auto md:right-12 md:w-80 sms-bounce z-50">
+                                <div class="bg-white/80 backdrop-blur-md border border-gray-200 p-4 rounded-3xl shadow-2xl flex items-start space-x-4">
+                                    <div class="w-12 h-12 bg-usmBlue rounded-2xl flex items-center justify-center text-white text-xl flex-shrink-0">💬</div>
+                                    <div>
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="font-black text-xs text-usmBlue uppercase">US Mobile Support</span>
+                                            <span class="text-[10px] text-gray-400">Just now</span>
+                                        </div>
+                                        <p class="text-sm font-semibold text-gray-800 leading-tight">
+                                            Still porting from {carrier}? {carriers[carrier].pinGuide} Tap here to finish: <span class="text-usmBlue underline">usm.run/port</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* RIGHT: THE BACKEND DASHBOARD */}
+                    <div class="w-full md:w-[400px] bg-usmDark p-8 flex flex-col text-white font-mono text-xs">
+                        <div class="flex items-center justify-between mb-8">
+                            <h2 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Safety Net Monitor</h2>
+                            <div class="px-2 py-1 bg-usmBlue/20 text-usmBlue rounded text-[10px] font-black uppercase">v1.0 MVP</div>
+                        </div>
+
+                        {/* Timer Section */}
+                        <div class="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+                            <div class="text-[10px] text-gray-500 uppercase mb-2 font-black">Inactivity Threshold</div>
+                            <div class="flex items-end space-x-2">
+                                <div class={`text-4xl font-black ${timer === 0 ? 'text-usmSuccess' : 'text-white'}`}>
+                                    {timer > 0 ? `00:${timer.toString().padStart(2, '0')}` : 'TRIGGERED'}
+                                </div>
+                                <div class="text-gray-500 mb-1 font-bold">/ 15m (SIMULATED)</div>
+                            </div>
+                            <div class="mt-4 h-1 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-usmBlue transition-all duration-1000" style={{ width: `${(timer/15)*100}%` }}></div>
+                            </div>
+                        </div>
+
+                        {/* Orchestration Log */}
+                        <div class="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="text-[10px] text-gray-500 uppercase mb-4 font-black">System Orchestration Log</div>
+                            {systemLog.length === 0 && (
+                                <div class="text-gray-600 italic">Waiting for user hesitation...</div>
+                            )}
+                            {systemLog.map((log, i) => (
+                                <div key={i} class="log-entry flex space-x-3">
+                                    <span class={`font-black ${log.type === 'success' ? 'text-usmSuccess' : log.type === 'sql' ? 'text-usmBlue' : 'text-gray-500'}`}>
+                                        {log.type === 'success' ? '✓' : log.type === 'sql' ? 'λ' : '>'}
+                                    </span>
+                                    <span class={log.type === 'success' ? 'text-usmSuccess font-bold' : 'text-gray-300'}>
+                                        {log.msg}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* CRM Status */}
+                        <div class="mt-8 pt-8 border-t border-white/10">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-gray-500 font-black uppercase tracking-widest text-[10px]">HubSpot Sync</span>
+                                <span class={`text-[10px] font-black uppercase ${interventionSent ? 'text-usmSuccess' : 'text-gray-600'}`}>
+                                    {interventionSent ? 'Synced' : 'Ready'}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10">
+                                <span class="text-gray-400 font-bold">Port_Intervention_Sent</span>
+                                <span class={`font-black uppercase text-[10px] ${interventionSent ? 'text-usmSuccess' : 'text-gray-600'}`}>
+                                    {interventionSent ? 'True' : 'False'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PortingSafetyNet />);
+    </script>
+</body>
+</html>
