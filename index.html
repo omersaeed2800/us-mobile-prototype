@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Mobile | Plan Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        usmBlue: '#0047FF',
+                        usmDark: '#0A0B10',
+                        usmGray: '#F4F7FA',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .step-enter { animation: slideIn 0.4s ease-out forwards; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-blue {
+            box-shadow: 0 0 0 0 rgba(0, 71, 255, 0.4);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 71, 255, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(0, 71, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 71, 255, 0); }
+        }
+    </style>
+</head>
+<body class="bg-usmGray text-usmDark antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const USMobileWizard = () => {
+            const [step, setStep] = useState(0);
+            const [formData, setFormData] = useState({
+                zip: '',
+                type: 'Personal',
+                usage: 'Average',
+                lines: 1,
+            });
+            const [isScanning, setIsScanning] = useState(false);
+            const [result, setResult] = useState(null);
+
+            const nextStep = () => setStep(s => s + 1);
+            const prevStep = () => setStep(s => s - 1);
+
+            const handleZipSubmit = (e) => {
+                e.preventDefault();
+                setIsScanning(true);
+                setTimeout(() => {
+                    setIsScanning(false);
+                    nextStep();
+                }, 2000);
+            };
+
+            const calculateResult = () => {
+                let plan = "Unlimited Starter";
+                let price = "$22.50";
+                let net = formData.zip.startsWith('9') ? 'Light Speed' : 'Warp';
+                
+                if (formData.type === 'Business') {
+                    plan = "By the Gig (Pooled)";
+                    price = "$10/mo + $2/GB";
+                } else if (formData.usage === 'High') {
+                    plan = "Unlimited Premium";
+                    price = "$32.50";
+                } else if (formData.usage === 'Low') {
+                    plan = "Light Plan";
+                    price = "$8.00";
+                }
+
+                setResult({ plan, price, net });
+                nextStep();
+            };
+
+            return (
+                <div class="min-h-screen flex flex-col items-center justify-center p-6">
+                    {/* Header */}
+                    <div class="mb-12 text-center">
+                        <h1 class="text-3xl font-extrabold tracking-tight text-usmBlue mb-2">US Mobile</h1>
+                        <div class="h-1 w-12 bg-usmBlue mx-auto rounded-full"></div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    {step < 5 && (
+                        <div class="w-full max-w-md bg-white h-2 rounded-full mb-8 overflow-hidden flex">
+                            {[0,1,2,3,4].map((i) => (
+                                <div key={i} class={`flex-1 transition-all duration-500 ${step >= i ? 'bg-usmBlue' : 'bg-gray-100'}`}></div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-8 md:p-12 step-enter">
+                        {step === 0 && (
+                            <div class="text-center">
+                                <h2 class="text-2xl font-bold mb-4">Find your perfect plan.</h2>
+                                <p class="text-gray-500 mb-8">Tell us where you are and how you use your phone, and we'll handle the rest.</p>
+                                <button onClick={nextStep} class="w-full py-4 bg-usmBlue text-white font-bold rounded-xl hover:bg-blue-700 transition-all">Get Started</button>
+                            </div>
+                        )}
+
+                        {step === 1 && (
+                            <form onSubmit={handleZipSubmit}>
+                                <h2 class="text-2xl font-bold mb-2">Check Local Coverage</h2>
+                                <p class="text-gray-500 mb-8">We'll find the strongest signal for your specific area.</p>
+                                <div class="relative mb-8">
+                                    <input 
+                                        autoFocus
+                                        required
+                                        type="text" 
+                                        maxLength="5"
+                                        placeholder="Enter ZIP Code"
+                                        class="w-full py-5 px-6 text-2xl font-bold bg-gray-50 rounded-2xl border-2 border-transparent focus:border-usmBlue outline-none transition-all"
+                                        value={formData.zip}
+                                        onChange={e => setFormData({...formData, zip: e.target.value})}
+                                    />
+                                    {isScanning && (
+                                        <div class="absolute right-6 top-6 text-usmBlue">
+                                            <svg class="animate-spin h-8 w-8" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </div>
+                                    )}
+                                </div>
+                                <button type="submit" disabled={isScanning} class="w-full py-4 bg-usmBlue text-white font-bold rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50">
+                                    {isScanning ? 'Scanning Networks...' : 'Continue'}
+                                </button>
+                            </form>
+                        )}
+
+                        {step === 2 && (
+                            <div>
+                                <h2 class="text-2xl font-bold mb-8 text-center">Is this for you or your business?</h2>
+                                <div class="grid grid-cols-2 gap-4">
+                                    {['Personal', 'Business'].map(type => (
+                                        <button 
+                                            key={type}
+                                            onClick={() => { setFormData({...formData, type}); nextStep(); }}
+                                            class={`p-8 rounded-2xl border-2 transition-all text-center ${formData.type === type ? 'border-usmBlue bg-blue-50' : 'border-gray-100 hover:border-gray-300'}`}
+                                        >
+                                            <div class="text-4xl mb-4">{type === 'Personal' ? '👤' : '🏢'}</div>
+                                            <div class="font-bold">{type}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div>
+                                <h2 class="text-2xl font-bold mb-2">How much data do you need?</h2>
+                                <p class="text-gray-500 mb-8">Don't worry, you can always change this later.</p>
+                                <div class="space-y-4">
+                                    {[
+                                        {id: 'Low', label: 'Essential (2GB - 10GB)', desc: 'Mostly WiFi, some maps/email.'},
+                                        {id: 'Average', label: 'Pro (10GB - 70GB)', desc: 'Socials, streaming, and hotspot.'},
+                                        {id: 'High', label: 'Power (70GB+)', desc: 'Living on the internet. No limits.'}
+                                    ].map(opt => (
+                                        <button 
+                                            key={opt.id}
+                                            onClick={() => { setFormData({...formData, usage: opt.id}); nextStep(); }}
+                                            class="w-full p-6 rounded-2xl border-2 border-gray-100 hover:border-usmBlue transition-all text-left group"
+                                        >
+                                            <div class="font-bold text-lg group-hover:text-usmBlue">{opt.label}</div>
+                                            <div class="text-sm text-gray-400">{opt.desc}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 4 && (
+                            <div class="text-center">
+                                <h2 class="text-2xl font-bold mb-2">Almost there!</h2>
+                                <p class="text-gray-500 mb-12">How many lines are we connecting today?</p>
+                                <div class="flex items-center justify-center space-x-12 mb-12">
+                                    <button onClick={() => setFormData({...formData, lines: Math.max(1, formData.lines - 1)})} class="w-16 h-16 rounded-full border-2 flex items-center justify-center text-2xl font-bold hover:bg-gray-50">-</button>
+                                    <div class="text-6xl font-black text-usmBlue">{formData.lines}</div>
+                                    <button onClick={() => setFormData({...formData, lines: formData.lines + 1})} class="w-16 h-16 rounded-full border-2 flex items-center justify-center text-2xl font-bold hover:bg-gray-50">+</button>
+                                </div>
+                                <button onClick={calculateResult} class="w-full py-4 bg-usmBlue text-white font-bold rounded-xl hover:bg-blue-700 transition-all">Show my Recommendation</button>
+                            </div>
+                        )}
+
+                        {step === 5 && result && (
+                            <div class="text-center">
+                                <div class="inline-block p-2 px-4 bg-green-100 text-green-700 font-bold rounded-full text-xs mb-6 uppercase tracking-widest">Your Best Match</div>
+                                <h2 class="text-4xl font-black mb-2">{result.plan}</h2>
+                                <div class="text-5xl font-black text-usmBlue mb-8">{result.price}<span class="text-lg text-gray-400">/mo</span></div>
+                                
+                                <div class="bg-usmDark text-white p-8 rounded-3xl mb-8 text-left">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="text-sm uppercase tracking-widest text-gray-500">Network Intelligence</div>
+                                        <div class="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                                    </div>
+                                    <div class="text-xl font-bold mb-1">{result.net} Network</div>
+                                    <p class="text-sm text-gray-400">Optimized for your area in {formData.zip}. Powered by 5G Ultra Wideband technology.</p>
+                                </div>
+
+                                <button onClick={() => window.location.href='https://www.usmobile.com/activate'} class="w-full py-4 bg-usmBlue text-white font-bold rounded-xl hover:bg-blue-700 transition-all mb-4">Select this Plan</button>
+                                <button onClick={() => setStep(0)} class="text-gray-400 font-bold hover:text-usmDark transition-all">Start Over</button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Footer Info */}
+                    <div class="mt-8 text-center text-gray-400 text-sm">
+                        Prototyped for US Mobile Backend Strategy 2026
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<USMobileWizard />);
+    </script>
+</body>
+</html>
