@@ -19,6 +19,7 @@
                         usmGray: '#F4F7FA',
                         usmBorder: '#E5E7EB',
                         slackDark: '#1A1D21',
+                        usmSuccess: '#10B981',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -33,11 +34,14 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .pulse-success { animation: pulse 2s infinite; }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        .cluster-signal { 
+            animation: pulse-blue 2s infinite; 
+            border: 2px solid rgba(0, 71, 255, 0.5);
+        }
+        @keyframes pulse-blue {
+            0% { background-color: rgba(0, 71, 255, 0.05); }
+            50% { background-color: rgba(0, 71, 255, 0.15); }
+            100% { background-color: rgba(0, 71, 255, 0.05); }
         }
     </style>
 </head>
@@ -52,6 +56,7 @@
             const [email, setEmail] = useState('');
             const [dataPoints, setDataPoints] = useState([]);
             const [score, setScore] = useState(0);
+            const [clusterDetected, setClusterDetected] = useState(false);
 
             const handleCapture = (e) => {
                 e.preventDefault();
@@ -61,118 +66,143 @@
 
             const runEnrichment = () => {
                 const points = [
-                    { label: 'Domain Identified', value: 'fedex.com', delay: 800 },
-                    { label: 'Company Size', value: '500,000+ Employees', delay: 1500 },
-                    { label: 'Industry', value: 'Logistics & Supply Chain', delay: 2200 },
-                    { label: 'Est. Annual Revenue', value: '$90.2 Billion', delay: 2800 },
-                    { label: 'Technology Stack', value: 'SAP, Verizon Business, IoT Core', delay: 3400 },
+                    { label: 'Domain Identified', value: 'fedex.com', delay: 600 },
+                    { label: 'Company Size', value: '500,000+ Employees', delay: 1200 },
+                    { label: 'Industry', value: 'Logistics & Supply Chain', delay: 1800 },
+                    { label: 'Est. Annual Revenue', value: '$90.2 Billion', delay: 2400 },
+                    { label: 'Headquarters', value: 'Memphis, TN', delay: 3000 },
                 ];
 
                 points.forEach((p, i) => {
                     setTimeout(() => {
                         setDataPoints(prev => [...prev, p]);
-                        setScore(Math.floor(((i + 1) / points.length) * 98));
+                        setScore(Math.floor(((i + 1) / points.length) * 85));
+                        
+                        // Trigger Cluster Signal mid-way
+                        if (i === 2) {
+                            setClusterDetected(true);
+                            setScore(98); // Boost score due to existing lines
+                        }
                     }, p.delay);
                 });
 
-                setTimeout(() => setStep('success'), 4500);
+                setTimeout(() => setStep('success'), 4000);
             };
 
             return (
                 <div class="min-h-screen flex flex-col">
                     {/* USM NAV */}
                     <nav class="bg-white border-b border-usmBorder px-8 py-4 flex justify-between items-center sticky top-0 z-50">
-                        <div class="text-2xl font-black text-usmBlue tracking-tighter">US Mobile <span class="text-gray-300 font-light ml-2">/ Help Center</span></div>
-                        <div class="flex items-center space-x-6 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                            <span>B2B Pipeline Simulator</span>
+                        <div class="text-2xl font-black text-usmBlue tracking-tighter uppercase italic">US Mobile <span class="text-gray-300 font-light ml-2 not-italic tracking-normal lowercase">/ help center</span></div>
+                        <div class="flex items-center space-x-2">
+                            <div class="h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+                            <span class="text-[10px] font-black text-usmDark uppercase tracking-widest italic">Live Shadow Funnel Demo</span>
                         </div>
                     </nav>
 
-                    <main class="flex-1 max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 p-8">
+                    <main class="flex-1 max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
                         
-                        {/* LEFT: THE CONTENT (ACT 1) */}
-                        <div class="lg:col-span-7 bg-white rounded-3xl p-10 border border-usmBorder shadow-sm overflow-hidden h-fit">
-                            <div class="mb-8 flex items-center space-x-2 text-usmBlue">
-                                <span class="text-xs font-black uppercase tracking-widest">Technical Guide</span>
-                                <span class="h-1 w-1 bg-gray-300 rounded-full"></span>
-                                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest italic">IoT & Fleet Deployment</span>
-                            </div>
-                            
-                            <h1 class="text-4xl font-black mb-6 tracking-tight italic">Advanced APN Configuration for IoT Fleet Devices</h1>
-                            
-                            <div class="prose prose-sm text-gray-500 font-medium leading-relaxed italic mb-10">
-                                <p class="mb-4">This guide outlines the specific APN (Access Point Name) requirements for high-density IoT deployments using the US Mobile Warp network. For fleets exceeding 1,000 devices, we recommend a custom private APN setup to ensure QCI-8 priority remains consistent across geographic handoffs.</p>
-                                <div class="bg-usmGray p-6 rounded-2xl border-l-4 border-usmBlue mb-6 font-mono text-xs">
-                                    <span class="text-usmBlue font-bold"># Step 1: Manual Config</span><br/>
-                                    APN Name: usm.warp.iot<br/>
-                                    Bearer: NR_LTE_UNSPECIFIED<br/>
-                                    Auth Type: PAP/CHAP
+                        {/* LEFT: THE CONTENT (USER EXPERIENCE) */}
+                        <div class="lg:col-span-7 bg-white p-12 lg:p-20 flex flex-col border-r border-usmBorder">
+                            <div class="max-w-2xl">
+                                <div class="mb-10 flex items-center space-x-3 text-usmBlue">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] border border-usmBlue/20 px-2 py-0.5 rounded">Technical whitepaper</span>
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Topic: IoT / Fleet Routing</span>
                                 </div>
-                                <p>Note: Standard consumer APNs (vzw.internet) will not support static IP addressing or VPN tunneling required for logistics software.</p>
-                            </div>
-
-                            {/* THE TRIPWIRE HOOK */}
-                            <div class="bg-usmBlue/5 border-2 border-usmBlue/20 rounded-[2.5rem] p-8 text-center relative">
-                                <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-usmBlue text-white text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full">B2B Fleet Unlock</div>
-                                <h3 class="text-xl font-black mb-2 italic">Managing 10+ devices?</h3>
-                                <p class="text-sm text-gray-500 mb-6 font-medium">Get the 2026 Fleet Pricing Sheet and Private APN Documentation.</p>
                                 
-                                <form onSubmit={handleCapture} class="flex flex-col md:flex-row gap-3">
-                                    <input 
-                                        required
-                                        type="email" 
-                                        placeholder="Enter work email (e.g. ops@fedex.com)"
-                                        class="flex-1 p-4 bg-white border-2 border-transparent focus:border-usmBlue rounded-2xl font-bold outline-none transition-all shadow-inner"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        disabled={step !== 'content'}
-                                    />
-                                    <button type="submit" disabled={step !== 'content'} class="px-8 py-4 bg-usmBlue text-white font-black rounded-2xl hover:bg-blue-700 transition-all uppercase italic tracking-tighter shadow-lg shadow-blue-200">
-                                        Unlock Sheet
-                                    </button>
-                                </form>
+                                <h1 class="text-5xl font-black mb-8 tracking-tighter italic uppercase leading-[0.9]">Advanced APN Configuration for IoT Fleet Devices</h1>
+                                
+                                <div class="prose text-gray-500 font-medium leading-relaxed italic mb-12 text-lg">
+                                    <p class="mb-6">This technical brief outlines the configuration requirements for high-density IoT deployments. For fleets exceeding 500+ active devices, standard consumer APNs will result in deprioritization during peak congestion windows.</p>
+                                    <div class="bg-usmGray p-8 rounded-3xl border-l-8 border-usmBlue mb-8 font-mono text-sm shadow-inner">
+                                        <span class="text-usmBlue font-bold">// Mandatory Fleet Config</span><br/>
+                                        APN Name: usm.enterprise.iot<br/>
+                                        Priority: QCI-8 (Always On)<br/>
+                                        Tunneling: Static IP Enabled
+                                    </div>
+                                    <p>Note: Failure to utilize the Enterprise APN will bypass our logistics-optimized routing core.</p>
+                                </div>
+
+                                {/* THE TRIPWIRE HOOK */}
+                                <div class="bg-usmBlue p-1 rounded-[3rem] shadow-2xl shadow-blue-900/20">
+                                    <div class="bg-white rounded-[2.8rem] p-10 text-center border border-usmBlue/10">
+                                        <div class="text-[10px] font-black text-usmBlue uppercase tracking-[0.3em] mb-4">Enterprise Access</div>
+                                        <h3 class="text-2xl font-black mb-3 tracking-tight italic uppercase">Managing a fleet of 10+?</h3>
+                                        <p class="text-sm text-gray-400 mb-8 font-bold italic uppercase tracking-tight">Unlock 2026 Fleet Pricing & IoT Provisioning Docs</p>
+                                        
+                                        <form onSubmit={handleCapture} class="flex flex-col md:flex-row gap-4 max-w-md mx-auto">
+                                            <input 
+                                                required
+                                                type="email" 
+                                                placeholder="Work email (e.g. ops@fedex.com)"
+                                                class="flex-1 p-5 bg-usmGray border-2 border-transparent focus:border-usmBlue rounded-2xl font-bold outline-none transition-all shadow-inner italic"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                disabled={step !== 'content'}
+                                            />
+                                            <button type="submit" disabled={step !== 'content'} class="px-10 py-5 bg-usmBlue text-white font-black rounded-2xl hover:bg-blue-700 transition-all uppercase italic tracking-tighter shadow-lg">
+                                                Get Fleet Pricing
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        {/* RIGHT: THE BACKEND ENRICHMENT (ACT 2 & 3) */}
-                        <div class="lg:col-span-5 space-y-6">
+                        {/* RIGHT: THE BACKEND (SHADOW INTELLIGENCE) */}
+                        <div class="lg:col-span-5 bg-usmDark flex flex-col relative">
                             
-                            {/* CLAY ENRICHMENT NODE */}
-                            <div class="bg-usmDark rounded-3xl p-8 border border-white/5 shadow-2xl overflow-hidden min-h-[400px] flex flex-col">
-                                <div class="flex items-center justify-between mb-8">
+                            <div class="p-10 lg:p-12 flex-1 flex flex-col">
+                                <div class="flex items-center justify-between mb-12">
                                     <div class="flex items-center space-x-3">
-                                        <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-white text-xs font-black italic">CL</div>
-                                        <h2 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] italic">Clay Enrichment Node</h2>
+                                        <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center text-white text-xs font-black italic shadow-[0_0_20px_rgba(147,51,234,0.5)]">CL</div>
+                                        <div>
+                                            <h2 class="text-[11px] font-black text-white uppercase tracking-[0.2em] italic leading-none">Clay Intelligence Node</h2>
+                                            <div class="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Waterfall Enrichment Active</div>
+                                        </div>
                                     </div>
-                                    <div class="text-[10px] font-black text-usmBlue uppercase italic tracking-widest animate-pulse">
-                                        {step === 'enrichment' ? 'Syncing...' : step === 'success' ? 'Complete' : 'Listening'}
+                                    <div class={`text-[10px] font-black uppercase italic tracking-widest ${step === 'enrichment' ? 'text-usmBlue animate-pulse' : 'text-gray-700'}`}>
+                                        {step === 'enrichment' ? 'Enriching Payload...' : step === 'success' ? 'Analysis Complete' : 'System Idle'}
                                     </div>
                                 </div>
 
                                 {step === 'content' && (
-                                    <div class="flex-1 flex flex-col items-center justify-center text-center opacity-30 italic">
-                                        <div class="w-12 h-12 border-2 border-dashed border-gray-600 rounded-full mb-4"></div>
-                                        <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">Waiting for Work Email Capture</p>
+                                    <div class="flex-1 flex flex-col items-center justify-center text-center">
+                                        <div class="w-20 h-20 border-4 border-dashed border-gray-800 rounded-full mb-6 flex items-center justify-center">
+                                            <div class="w-2 h-2 bg-gray-800 rounded-full animate-ping"></div>
+                                        </div>
+                                        <p class="text-[10px] font-black text-gray-700 uppercase tracking-[0.3em] italic">Waiting for Signal...</p>
                                     </div>
                                 )}
 
                                 {(step === 'enrichment' || step === 'success') && (
                                     <div class="flex-1 space-y-4">
+                                        {/* Domain Cluster Signal (The Flex Add) */}
+                                        {clusterDetected && (
+                                            <div class="cluster-signal p-5 rounded-2xl border-2 border-usmBlue/50 mb-8 flex items-start space-x-4 waterfall-entry">
+                                                <div class="text-2xl mt-1">🛰️</div>
+                                                <div>
+                                                    <div class="text-[10px] font-black text-usmBlue uppercase tracking-widest italic mb-1">Domain Cluster Signal</div>
+                                                    <p class="text-sm font-bold text-white italic leading-tight">Domain 'fedex.com' has 2 active lines detected. Flagging for expansion.</p>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {dataPoints.map((point, i) => (
-                                            <div key={i} class="waterfall-entry bg-white/5 border border-white/10 p-4 rounded-2xl flex justify-between items-center italic">
+                                            <div key={i} class="waterfall-entry bg-white/5 border border-white/10 p-5 rounded-2xl flex justify-between items-center italic">
                                                 <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">{point.label}</span>
-                                                <span class="text-sm font-bold text-white">{point.value}</span>
+                                                <span class="text-sm font-black text-white uppercase tracking-tight">{point.value}</span>
                                             </div>
                                         ))}
                                         
                                         {step === 'success' && (
-                                            <div class="mt-8 pt-8 border-t border-white/10 waterfall-entry">
-                                                <div class="flex justify-between items-end mb-2">
-                                                    <span class="text-[10px] font-black text-gray-500 uppercase italic">Enterprise Lead Score</span>
-                                                    <span class="text-4xl font-black text-usmSuccess italic tracking-tighter">{score}/100</span>
+                                            <div class="mt-12 pt-8 border-t border-white/10 waterfall-entry">
+                                                <div class="flex justify-between items-end mb-4">
+                                                    <span class="text-[10px] font-black text-gray-500 uppercase italic tracking-widest">Enterprise Score</span>
+                                                    <span class="text-6xl font-black text-usmSuccess italic tracking-tighter leading-none">{score}<span class="text-xl">/100</span></span>
                                                 </div>
-                                                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
-                                                    <div class="h-full bg-usmSuccess transition-all duration-1000 shadow-[0_0_15px_#10B981]" style={{ width: `${score}%` }}></div>
+                                                <div class="h-3 bg-white/10 rounded-full overflow-hidden shadow-inner">
+                                                    <div class="h-full bg-usmSuccess transition-all duration-1000 shadow-[0_0_20px_rgba(16,185,129,0.8)]" style={{ width: `${score}%` }}></div>
                                                 </div>
                                             </div>
                                         )}
@@ -180,32 +210,32 @@
                                 )}
                             </div>
 
-                            {/* SLACK VIP ROUTING (ACT 3) */}
+                            {/* SLACK VIP ROUTING */}
                             {step === 'success' && (
-                                <div class="bg-slackDark rounded-3xl p-8 border border-slackBorder shadow-2xl waterfall-entry">
+                                <div class="bg-slackDark border-t border-slackBorder p-10 waterfall-entry">
                                     <div class="flex items-center space-x-2 mb-6">
-                                        <span class="text-gray-500 text-lg font-black">#</span>
-                                        <h3 class="text-xs font-black text-white uppercase tracking-widest italic">enterprise-alerts</h3>
-                                        <span class="bg-red-500 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase ml-auto animate-bounce">Priority 1</span>
+                                        <span class="text-gray-500 text-xl font-black italic">#</span>
+                                        <h3 class="text-xs font-black text-white uppercase tracking-[0.2em] italic">enterprise-priority-alerts</h3>
+                                        <div class="bg-red-500 text-white text-[8px] px-3 py-1 rounded-full font-black uppercase ml-auto animate-pulse">Critical</div>
                                     </div>
                                     
-                                    <div class="bg-white/5 rounded-2xl p-6 border-l-4 border-usmBlue">
-                                        <div class="flex items-center space-x-3 mb-4">
-                                            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-usmDark text-xs italic">FX</div>
+                                    <div class="bg-white p-8 rounded-3xl">
+                                        <div class="flex items-center space-x-4 mb-6">
+                                            <div class="w-12 h-12 bg-usmDark rounded-2xl flex items-center justify-center font-black text-white text-sm italic">FX</div>
                                             <div>
-                                                <div class="text-sm font-black text-white italic">FedEx Logistics Opportunity</div>
-                                                <div class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Enriched via Clay x n8n</div>
+                                                <div class="text-lg font-black text-usmDark italic leading-none uppercase">FedEx Opportunity</div>
+                                                <div class="text-[9px] text-usmBlue font-black uppercase tracking-widest mt-1">Expansion Lead Detected</div>
                                             </div>
                                         </div>
-                                        <p class="text-xs text-gray-300 font-medium italic leading-relaxed mb-6">
-                                            "Ops Director signaled intent via <b>Technical IoT APN Guide</b>. High-value fleet candidate detected."
+                                        <p class="text-sm text-gray-500 font-bold italic leading-relaxed mb-8 border-l-4 border-usmBlue pl-4">
+                                            "Ops Lead at <b>FedEx</b> just signaled intent via technical docs. Database cluster check confirms 2 lines already on Warp. Start expansion sequence."
                                         </p>
-                                        <div class="grid grid-cols-2 gap-3 mb-6">
-                                            <button class="py-3 bg-usmBlue text-white text-[10px] font-black rounded-xl uppercase italic tracking-tighter">View HubSpot Deal</button>
-                                            <button class="py-3 bg-white text-usmDark text-[10px] font-black rounded-xl uppercase italic tracking-tighter">Call Now (VOIP)</button>
+                                        <div class="grid grid-cols-2 gap-4 mb-4">
+                                            <button class="py-4 bg-usmBlue text-white text-[10px] font-black rounded-xl uppercase italic tracking-widest shadow-lg shadow-blue-200">HubSpot Deal</button>
+                                            <button class="py-4 bg-usmDark text-white text-[10px] font-black rounded-xl uppercase italic tracking-widest">Outbound Call</button>
                                         </div>
-                                        <div class="text-[9px] text-gray-600 font-bold uppercase tracking-widest text-center">
-                                            ✓ B2C Nurture Drip Paused (Bypass Triggered)
+                                        <div class="text-[9px] text-usmSuccess font-black uppercase tracking-widest text-center italic">
+                                            ✓ B2C Consumer Drip Suppressed
                                         </div>
                                     </div>
                                 </div>
@@ -213,23 +243,23 @@
                         </div>
                     </main>
 
-                    {/* FAIZAN'S BOTTOM LINE */}
-                    <footer class="bg-black text-white p-10 mt-auto">
-                        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
-                            <div class="max-w-md">
-                                <h4 class="text-xs font-black uppercase tracking-[0.4em] text-usmBlue mb-4 italic underline decoration-usmBlue decoration-4 underline-offset-8">Strategy Objective</h4>
-                                <p class="text-sm text-gray-400 font-medium italic leading-relaxed">
-                                    Capture Enterprise whales via technical gravity. We don't ask for company size—we use work-email enrichment to silently qualify $10,000+ ACV deals while they are still in the "Research" phase of the funnel.
+                    {/* FOOTER */}
+                    <footer class="bg-black text-white p-12 border-t border-white/5">
+                        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
+                            <div class="max-w-lg">
+                                <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-usmBlue mb-6 italic underline decoration-usmBlue decoration-4 underline-offset-8">Shadow Funnel Architecture</h4>
+                                <p class="text-sm text-gray-400 font-bold italic leading-loose uppercase tracking-tight">
+                                    We identify enterprise value without friction. By mapping technical intent to firmographic data, we route high-ACV leads to human sales while the consumer is still in the "Research" phase.
                                 </p>
                             </div>
-                            <div class="flex space-x-12">
+                            <div class="flex items-center space-x-16">
                                 <div class="text-center">
-                                    <div class="text-[10px] font-black text-gray-600 uppercase italic mb-2 tracking-widest">Lead Velocity</div>
-                                    <div class="text-4xl font-black italic tracking-tighter">+42%</div>
+                                    <div class="text-[10px] font-black text-gray-600 uppercase italic mb-2 tracking-widest">Expansion Delta</div>
+                                    <div class="text-5xl font-black italic tracking-tighter text-white">+580%</div>
                                 </div>
-                                <div class="text-center border-l border-white/10 pl-12">
-                                    <div class="text-[10px] font-black text-gray-600 uppercase italic mb-2 tracking-widest">B2B Conversion</div>
-                                    <div class="text-4xl font-black italic tracking-tighter">12.5%</div>
+                                <div class="text-center border-l border-white/10 pl-16">
+                                    <div class="text-[10px] font-black text-gray-600 uppercase italic mb-2 tracking-widest">CAC Efficiency</div>
+                                    <div class="text-5xl font-black italic tracking-tighter text-usmBlue">8.2x</div>
                                 </div>
                             </div>
                         </div>
